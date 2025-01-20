@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="center">
+    <header>
+        <h1>Cookie Clicker Game</h1>
+        <nav>
+            <a href="/">Play Game</a> |
+            <a href="/leaderboard">Leaderboard</a>
+        </nav>
+    </header>
+    <table class="leaderboard-table">
+        <tr>
+            <th>Username</th>
+            <th>Total Clicks</th>
+            <th>Highest CPS</th>
+        </tr>
+        {% for row in results %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <footer>
+        <p>Thank you for playing!</p>
+        <a href="/">Back to Game</a>
+    </footer>
+</div>
+</body>
+</html>

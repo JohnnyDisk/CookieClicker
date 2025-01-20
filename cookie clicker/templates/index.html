@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        let count = 0;
+        let cps = 0;
+        let highestCps = 0;
+        let timer;
+        let startTime;
+        let timerStarted = false;
+        let clicksInCurrentSecond = 0;
+
+        function startGame() {
+            const username = document.getElementById("username").value;
+            if (!username) {
+                alert("Please enter a username to start the game.");
+                return;
+            }
+            if (!timerStarted) {
+                fetch('/start_game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: username })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Username is required");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    startTime = data.start_time;
+                    count = 0;
+                    cps = 0;
+                    clicksInCurrentSecond = 0;
+                    document.getElementById("count").innerText = count;
+                    document.getElementById("cps").innerText = cps;
+                    document.getElementById("timer").innerText = "30";
+                    timerStarted = true;
+
+                    timer = setInterval(() => {
+                        const elapsed = Math.floor((Date.now() / 1000) - startTime);
+                        const remaining = 30 - elapsed;
+                        document.getElementById("timer").innerText = remaining;
+
+                        // Update CPS every second
+                        if (elapsed % 1 === 0) {
+                            cps = clicksInCurrentSecond;
+                            if (cps > highestCps) {
+                                highestCps = cps;
+                            }
+                            document.getElementById("cps").innerText = cps;
+                            clicksInCurrentSecond = 0; // Reset for the next second
+                        }
+
+                        if (remaining <= 0) {
+                            clearInterval(timer);
+                            alert("Time's up! You clicked " + count + " times.");
+                            saveClickData(username, count, highestCps); // Send the highest CPS at the end
+                            document.getElementById("clickButton").disabled = true;
+                        }
+                    }, 1000);
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+            }
+        }
+
+        function countClicks() {
+            const username = document.getElementById("username").value;
+            fetch('/count_clicks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username })
+            })
+            .then(response => {
+                if (response.ok) {
+                    count++;
+                    clicksInCurrentSecond++;
+                    document.getElementById("count").innerText = count;
+                } else {
+                    console.log("Cannot count clicks. Game is not active.");
+                }
+            });
+        }
+
+        function saveClickData(username, count, highestCps) {
+            // Log the highestCps value before sending
+            console.log("Saving Click Data - Username:", username, "Count:", count, "Highest CPS:", highestCps);
+
+            // Validate highestCps before sending
+            if (highestCps === undefined || highestCps === null) {
+                console.error("highestCps is not defined or is null.");
+                return; // Prevent sending invalid data
+            }
+
+            fetch('/save_click_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, count: count, highestCps: highestCps })
+            });
+        }
+
+        function showCrumbs(event) {
+            const crumbsContainer = document.getElementById("crumbs");
+            const button = document.getElementById("clickButton");
+
+            // Get the button's position relative to the viewport
+            const buttonRect = button.getBoundingClientRect();
+
+            // Get the mouse position relative to the viewport
+            const mouseX = event.clientX;
+            const mouseY = event.clientY;
+
+            // Calculate the mouse position relative to the button's top-left corner
+            const buttonX = mouseX - buttonRect.left -20;
+            const buttonY = mouseY - buttonRect.top - 140;
+
+            crumbsContainer.innerHTML = ""; // Clear previous crumbs
+
+            // Create crumbs at the mouse position
+            for (let i = 0; i < 10; i++) {
+                const crumb = document.createElement("div");
+                crumb.classList.add("crumb");
+
+                // Position the crumbs at the mouse position on the button
+                const randomOffsetX = (Math.random() - 0.5) * 20;  // Small random offset in X direction
+                const randomOffsetY = (Math.random() - 0.5) * 20;  // Small random offset in Y direction
+
+                // Correctly position the crumb within the button based on mouse click
+                crumb.style.left = (buttonX + randomOffsetX) + "px";
+                crumb.style.top = (buttonY + randomOffsetY) + "px";
+
+                // Apply animation properties for random movements
+                const dx = (Math.random() - 0.5) * 300 + "px"; // Random x-direction movement
+                const dy = (Math.random() - 0.5) * 300 + "px"; // Random y-direction movement
+
+                crumb.style.setProperty("--dx", dx);
+                crumb.style.setProperty("--dy", dy);
+
+                crumbsContainer.appendChild(crumb);
+
+                // Remove the crumb after the animation ends
+                setTimeout(() => {
+                    crumb.remove();
+                }, 1000);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="center">
+    <header>
+        <h1>Cookie Clicker Game</h1>
+        <nav>
+            <a href="/">Play Game</a> |
+            <a href="/leaderboard">Leaderboard</a>
+        </nav>
+    </header>
+    
+    <input type="text" id="username" placeholder="Enter your username" required>
+    <button id="clickButton" onclick="countClicks(); startGame(); showCrumbs(event)">Click me!
+        <div id="crumbs"></div>
+    </button>
+    <p>Clicks: <span id="count">0</span></p>
+    <p>CPS: <span id="cps">0</span></p>
+    <p>Time Remaining: <span id="timer">30</span> seconds</p>
+    <a href="/leaderboard">View Leaderboard</a>
+
+</div>
+</body>
+</html>
