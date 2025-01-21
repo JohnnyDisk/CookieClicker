@@ -1,6 +1,6 @@
 # Cookie Clicker Game
 
-Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke mest på 30 sekunder. Spillet har også en leaderboard-funksjon for å vise de beste spillerne.
+Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke mest på 30 sekunder. Spillet har også en leaderboard-funksjon for å vise de beste spillerne. Dette prosjektet kombinerer backend-funksjonalitet, en responsiv frontend, og enkle animasjoner for å skape en engasjerende opplevelse.
 
 ## Funksjonalitet
 
@@ -8,6 +8,8 @@ Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke me
 - **Klikk:** Klikk på knappen for å samle poeng.
 - **CPS (klikk per sekund):** Vis CPS i sanntid, og lagre høyeste CPS.
 - **Leaderboard:** Viser en oversikt over spillerne med høyest poengsum, begrenset til maksimalt 600 klikk.
+- **Profanity Check:** Filtrerer bort upassende brukernavn ved bruk av `better-profanity`.
+- **Responsive Animasjoner:** Interaktive smuler ved knappetrykk for å forbedre brukeropplevelsen.
 
 ## Teknologier
 
@@ -15,18 +17,30 @@ Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke me
 - **Frontend:** HTML, CSS, JavaScript
 - **Database:** SQLite
 - **Profanity filter:** `better-profanity`
+- **Statiske filer:** CSS og JS ligger i `static/`-mappen.
 
 ## Hvordan kjøre prosjektet
 
-1. **Installer avhengigheter:**
+1. **Klon prosjektet fra GitHub:**
 
    ```bash
-   pip install flask better-profanity
+   git clone https://github.com/JohnnyDisk/CookieClicker.git
+   cd CookieClicker
    ```
 
-2. **Initialiser databasen:**
+2. **Installer avhengigheter:**
 
-   Kjør scriptet for å opprette nødvendige tabeller i SQLite-databasen:
+   Bruk en virtuell miljø for å holde avhengighetene isolert:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate # For Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Initialiser databasen:**
+
+   Kør scriptet for å opprette nødvendige tabeller i SQLite-databasen:
 
    ```bash
    python app.py
@@ -34,13 +48,13 @@ Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke me
 
    Tabellen `clicks` og `game_state` opprettes automatisk ved oppstart.
 
-3. **Start serveren:**
+4. **Start serveren:**
 
    ```bash
    flask run
    ```
 
-4. **Åpne nettleseren:**
+5. **Åpne nettleseren:**
 
    Besøk [http://127.0.0.1:5000](http://127.0.0.1:5000) for å spille spillet.
 
@@ -53,21 +67,24 @@ Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke me
 ### `POST /start_game`
 
 - Starter et nytt spill.
-- Krever `username` som JSON.
+- Input: JSON med `username`.
+- Validerer brukernavnet for upassende innhold.
 
 ### `POST /count_clicks`
 
 - Registrerer et klikk.
-- Krever `username` som JSON.
+- Input: JSON med `username`.
+- Krever at spillet er aktivt for brukeren.
 
 ### `POST /save_click_data`
 
 - Lagrer klikkdata og setter spillet til inaktiv for brukeren.
-- Krever `username`, `count` og `highestCps` som JSON.
+- Input: JSON med `username`, `count` og `highestCps`.
+- Validerer høyeste CPS og upassende brukernavn.
 
 ### `GET /leaderboard`
 
-- Viser en liste over de beste spillerne.
+- Returnerer en oversikt over de beste spillerne med maksimal poengsum på 600 klikk.
 
 ## Spillregler
 
@@ -77,30 +94,46 @@ Et web-basert spill bygget med Flask hvor brukere kan konkurrere om å klikke me
 
 ## Eksempelbruk
 
-- Start et spill ved å skrive inn et brukernavn og klikke på "Click me!"-knappen.
-- Følg med på CPS og tiden som gjenstår.
-- Etter spillet kan du sjekke leaderboardet for å se plasseringen din.
+- **Start et spill:**
+  - Gå til hovedsiden, skriv inn brukernavnet ditt og klikk på "Click me!"-knappen.
+  - Klikk så raskt du kan for å samle poeng.
+- **Leaderboard:**
+  - Besøk `/leaderboard` for å se din plassering.
 
 ## Mappeoversikt
 
 ```
-/
+CookieClicker/
 ├── app.py                # Flask-backend
+├── requirements.txt      # Avhengigheter
 ├── templates/
 │   ├── index.html        # Hovedsiden for spillet
 │   └── leaderboard.html  # Leaderboard-siden
 ├── static/
-│   └── styles.css        # CSS-filer
+│   ├── styles.css        # CSS-filer
+│   └── script.js         # JavaScript-filer
 └── click_data.db         # SQLite-database
 ```
 
-## Mulige forbedringer
+## Videre arbeid
 
-- Legge til brukerautentisering for å beskytte brukerdata.
-- Implementere støtte for flere språk.
-- Optimalisere animasjoner og brukergrensesnitt.
-- Tilføye flere spillmoduser.
+- **Utvidelse av spillfunksjonalitet:**
+  - Legge til flere spillmoduser (f.eks. tidsangrep eller presisjonsklikk).
+- **Brukerautentisering:**
+  - Tillat brukere å opprette kontoer og logge inn.
+- **Globalt leaderboard:**
+  - Implementer en skyløsning for å vise poengsummer på tvers av deployerte instanser.
+- **Optimalisering:**
+  - Forbedre ytelsen ved høy trafikk.
+
+## Bidrag
+
+Bidrag er velkomne! Lag en pull request eller opprett en issue dersom du har forslag til forbedringer.
 
 ## Lisens
 
-Dette prosjektet er åpent kildekode under [MIT-lisensen](LICENSE).
+Dette prosjektet er åpen kildekode under [MIT-lisensen](LICENSE).
+
+---
+
+Besøk prosjektet på GitHub: [Cookie Clicker Game](https://github.com/JohnnyDisk/CookieClicker).
